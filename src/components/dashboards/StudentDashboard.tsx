@@ -1,4 +1,4 @@
-import { FileText, Calendar, Award, Download } from 'lucide-react';
+import { Calendar, Award, Download, FileText } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,9 +35,10 @@ export const StudentDashboard = () => {
           trend={{ value: 2, isPositive: true }}
         />
         <StatCard
-          title="Trabajos Pendientes"
-          value="3"
-          icon={FileText}
+          title="Materias Aprobadas"
+          value="12"
+          icon={Award}
+          description="Total acumuladas"
         />
       </div>
 
@@ -114,12 +115,6 @@ export const StudentDashboard = () => {
                 type: 'success'
               },
               {
-                title: 'Trabajo práctico próximo a vencer',
-                description: 'TP de Historia vence el 20/03/2025',
-                time: 'Hace 1 día',
-                type: 'warning'
-              },
-              {
                 title: 'Actualización del calendario',
                 description: 'Se ha modificado la fecha del examen final de Lengua',
                 time: 'Hace 3 días',
@@ -132,8 +127,6 @@ export const StudentDashboard = () => {
                     className={`mt-1 h-2 w-2 rounded-full ${
                       notif.type === 'success'
                         ? 'bg-success'
-                        : notif.type === 'warning'
-                        ? 'bg-warning'
                         : 'bg-primary'
                     }`}
                   />
