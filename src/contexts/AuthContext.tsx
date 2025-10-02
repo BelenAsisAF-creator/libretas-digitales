@@ -23,13 +23,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to determine role from email domain
-const getRoleFromEmail = (email: string): UserRole => {
-  if (email.includes('alumno') || email.includes('student')) return 'student';
-  if (email.includes('docente') || email.includes('teacher')) return 'teacher';
-  if (email.includes('bedelia') || email.includes('registrar')) return 'registrar';
-  if (email.includes('admin') || email.includes('secretary')) return 'admin';
-  return 'student'; // default
+// Fetch user role from database
+const getUserRole = async (userId: string): Promise<UserRole> => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('Error fetching user role:', error);
+    return 'student'; // Default fallback
+  }
+
+  return data.role as UserRole;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,14 +49,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
+        setIsLoading(false);
+        
+        // Defer role fetching to avoid deadlock
         if (session?.user) {
-          const role = getRoleFromEmail(session.user.email || '');
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuario',
-            role,
-          });
+          setTimeout(async () => {
+            const role = await getUserRole(session.user.id);
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuario',
+              role,
+            });
+          }, 0);
         } else {
           setUser(null);
         }
@@ -57,10 +69,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        const role = getRoleFromEmail(session.user.email || '');
+        const role = await getUserRole(session.user.id);
         setUser({
           id: session.user.id,
           email: session.user.email || '',
@@ -75,11 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Validate institutional email
-    if (!email.endsWith('@terciariourquiza.edu.ar')) {
-      throw new Error('Debe utilizar un correo institucional (@terciariourquiza.edu.ar)');
-    }
-
     await signInWithEmail(email, password);
   };
 
