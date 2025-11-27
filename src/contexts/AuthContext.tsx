@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { signInWithEmail, signInWithGoogle, signOut as authSignOut } from '@/integrations/supabase/auth';
+import { signInWithEmail, signOut as authSignOut } from '@/integrations/supabase/auth';
 
 export type UserRole = 'student' | 'teacher' | 'registrar' | 'admin';
 
@@ -16,20 +16,25 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to determine role from email domain
-const getRoleFromEmail = (email: string): UserRole => {
-  if (email.includes('alumno') || email.includes('student')) return 'student';
-  if (email.includes('docente') || email.includes('teacher')) return 'teacher';
-  if (email.includes('bedelia') || email.includes('registrar')) return 'registrar';
-  if (email.includes('admin') || email.includes('secretary')) return 'admin';
-  return 'student'; // default
+// Helper to get role from user_roles table
+const getUserRole = async (userId: string): Promise<UserRole> => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .single();
+  
+  if (error || !data) {
+    return 'student'; // default fallback
+  }
+  
+  return data.role as UserRole;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -43,13 +48,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         setSession(session);
         if (session?.user) {
-          const role = getRoleFromEmail(session.user.email || '');
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuario',
-            role,
-          });
+          // Defer role fetching to avoid blocking
+          setTimeout(async () => {
+            const role = await getUserRole(session.user.id);
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuario',
+              role,
+            });
+          }, 0);
         } else {
           setUser(null);
         }
@@ -57,10 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        const role = getRoleFromEmail(session.user.email || '');
+        const role = await getUserRole(session.user.id);
         setUser({
           id: session.user.id,
           email: session.user.email || '',
@@ -83,10 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithEmail(email, password);
   };
 
-  const loginWithGoogle = async () => {
-    await signInWithGoogle();
-  };
-
   const logout = async () => {
     await authSignOut();
     setUser(null);
@@ -94,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, login, loginWithGoogle, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
