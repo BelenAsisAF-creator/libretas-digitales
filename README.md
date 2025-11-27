@@ -1,4 +1,3 @@
-//EDICION PARA DEPLOY
 # Welcome to your Lovable project
 
 ## Project info

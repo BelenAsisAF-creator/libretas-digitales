@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { signInWithEmail, signOut as authSignOut } from '@/integrations/supabase/auth';
+import { signInWithEmail, signInWithGoogle, signOut as authSignOut } from '@/integrations/supabase/auth';
 
 export type UserRole = 'student' | 'teacher' | 'registrar' | 'admin';
 
@@ -16,24 +16,26 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to get role from user_roles table
+// Fetch user role from database
 const getUserRole = async (userId: string): Promise<UserRole> => {
   const { data, error } = await supabase
     .from('user_roles')
     .select('role')
     .eq('user_id', userId)
-    .single();
-  
+    .maybeSingle();
+
   if (error || !data) {
-    return 'student'; // default fallback
+    console.error('Error fetching user role:', error);
+    return 'student'; // Default fallback
   }
-  
+
   return data.role as UserRole;
 };
 
@@ -47,8 +49,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
+        setIsLoading(false);
+        
+        // Defer role fetching to avoid deadlock
         if (session?.user) {
-          // Defer role fetching to avoid blocking
           setTimeout(async () => {
             const role = await getUserRole(session.user.id);
             setUser({
@@ -83,12 +87,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Validate institutional email
-    if (!email.endsWith('@terciariourquiza.edu.ar')) {
-      throw new Error('Debe utilizar un correo institucional (@terciariourquiza.edu.ar)');
-    }
-
     await signInWithEmail(email, password);
+  };
+
+  const loginWithGoogle = async () => {
+    await signInWithGoogle();
   };
 
   const logout = async () => {
@@ -98,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, login, loginWithGoogle, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
