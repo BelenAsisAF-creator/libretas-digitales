@@ -10,7 +10,7 @@ export const StudentDashboard = () => {
       <div>
         <h1 className="text-3xl font-bold">Panel de Control - Estudiante</h1>
         <p className="text-muted-foreground mt-1">
-          Bienvenido a tu libreta digital de calificaciones
+          Bienvenido a tu campus académico digital
         </p>
       </div>
 
