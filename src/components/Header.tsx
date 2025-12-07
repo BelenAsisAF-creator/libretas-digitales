@@ -27,7 +27,7 @@ export const Header = () => {
       <div className="flex items-center gap-2">
         <SidebarTrigger />
         <h2 className="text-lg font-semibold hidden md:block">
-          Libreta Digital de Calificaciones
+          Campus Académico Digital
         </h2>
       </div>
 

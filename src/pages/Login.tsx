@@ -71,7 +71,7 @@ export default function Login() {
             <GraduationCap className="h-10 w-10 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Libreta Digital de Calificaciones</CardTitle>
+            <CardTitle className="text-2xl">Campus Académico Digital</CardTitle>
             <CardDescription className="text-base mt-2">
               Terciario Urquiza - Acceso al Sistema
             </CardDescription>
