@@ -7,7 +7,10 @@ import {
   BarChart3,
   BookOpen,
   Calendar,
-  Settings
+  Settings,
+  Bell,
+  Clock,
+  Shield
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,23 +34,21 @@ const menuByRole = {
     { title: 'Asistencias', url: '/student/attendance', icon: Calendar },
   ],
   teacher: [
-    { title: 'Panel de Control', url: '/dashboard', icon: LayoutDashboard },
-    { title: 'Cargar Notas', url: '/teacher/grades', icon: FileText },
-    { title: 'Asistencias', url: '/teacher/attendance', icon: CheckSquare },
-    { title: 'Mis Cursos', url: '/teacher/courses', icon: BookOpen },
+    { title: 'Panel de Control', url: '/docente/dashboard', icon: LayoutDashboard },
+    { title: 'Mis Materias', url: '/docente/materias', icon: BookOpen },
+    { title: 'Historial', url: '/docente/historial', icon: Clock },
   ],
   registrar: [
-    { title: 'Panel de Control', url: '/dashboard', icon: LayoutDashboard },
-    { title: 'Validar Notas', url: '/registrar/validate', icon: CheckSquare },
-    { title: 'Gestión de Usuarios', url: '/registrar/users', icon: Users },
-    { title: 'Reportes', url: '/registrar/reports', icon: BarChart3 },
+    { title: 'Panel de Control', url: '/bedelia/dashboard', icon: LayoutDashboard },
+    { title: 'Validar Planillas', url: '/bedelia/validaciones', icon: CheckSquare },
+    { title: 'Gestión de Usuarios', url: '/bedelia/usuarios', icon: Users },
+    { title: 'Notificaciones', url: '/bedelia/notificaciones', icon: Bell },
   ],
   admin: [
-    { title: 'Panel de Control', url: '/dashboard', icon: LayoutDashboard },
-    { title: 'Gestión de Roles', url: '/admin/roles', icon: Users },
-    { title: 'Reportes Académicos', url: '/admin/reports', icon: BarChart3 },
-    { title: 'Estadísticas', url: '/admin/statistics', icon: BarChart3 },
-    { title: 'Configuración', url: '/admin/settings', icon: Settings },
+    { title: 'Panel de Control', url: '/superadmin/dashboard', icon: LayoutDashboard },
+    { title: 'Reportes Académicos', url: '/superadmin/reportes', icon: BarChart3 },
+    { title: 'Administración Académica', url: '/superadmin/academico', icon: BookOpen },
+    { title: 'Gestión de Roles', url: '/superadmin/roles', icon: Shield },
   ],
 };
 
